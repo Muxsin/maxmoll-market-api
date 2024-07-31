@@ -28,6 +28,12 @@ class OrderController extends Controller
             $query->where('customer', 'like', "%$customer%");
         }
 
+        if ($request->filled('warehouse')) {
+            $warehouse = $request->get('warehouse');
+            $query->join('warehouses', 'orders.warehouse_id', '=', 'warehouses.id')
+              ->where('warehouses.name', 'like', "%{$warehouse}%");
+        }
+
         $orders = $query->get();
 
         return OrderResource::collection($orders);
