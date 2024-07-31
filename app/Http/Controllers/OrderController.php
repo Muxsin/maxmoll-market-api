@@ -34,7 +34,7 @@ class OrderController extends Controller
               ->where('warehouses.name', 'like', "%{$warehouse}%");
         }
 
-        $orders = $query->get();
+        $orders = $query->paginate();
 
         return OrderResource::collection($orders);
     }
