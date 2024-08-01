@@ -78,32 +78,36 @@ class OrderController extends Controller
 
     public function update(UpdateOrderRequest $request, Order $order)
     {
-        DB::beginTransaction();
+        if ($order->status === OrderStatus::Active->value) {
+            DB::beginTransaction();
 
-        try {
-            $order->update($request->only(['customer', 'warehouse_id']));
-
-            $items = $request->input('items', []);
-            
-            $orderItemsData = [];
-
-            foreach ($items as $item) {
-                $orderItemsData[] = new OrderItem([
-                    'product_id' => $item['product_id'],
-                    'count' => $item['count'],
-                ]);
+            try {
+                $order->update($request->only(['customer', 'warehouse_id']));
+    
+                $items = $request->input('items', []);
+                
+                $orderItemsData = [];
+    
+                foreach ($items as $item) {
+                    $orderItemsData[] = new OrderItem([
+                        'product_id' => $item['product_id'],
+                        'count' => $item['count'],
+                    ]);
+                }
+    
+                $order->items()->delete();
+                $order->items()->saveMany($orderItemsData);
+    
+                DB::commit();
+    
+                return $order->load('items');
+            } catch (\Exception $e) {
+                DB::rollBack();
+    
+                return response('', 500);
             }
-
-            $order->items()->delete();
-            $order->items()->saveMany($orderItemsData);
-
-            DB::commit();
-
-            return $order->load('items');
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response('', 500);
+        } else {
+            return response('', 400);
         }
     }
 
