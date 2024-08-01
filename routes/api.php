@@ -12,5 +12,7 @@ Route::group(['prefix' => 'v1'], function() {
     Route::get('/warehouses', [WarehouseController::class, 'index']);
 
     Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/orders/{order}', [OrderController::class, 'show']);
     Route::post('/orders', [OrderController::class, 'store']);
+    Route::put('/orders/{order}', [OrderController::class, 'update']);
 });

@@ -73,10 +73,38 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
+        return $order->load('items');
     }
 
     public function update(UpdateOrderRequest $request, Order $order)
     {
+        DB::beginTransaction();
+
+        try {
+            $order->update($request->only(['customer', 'warehouse_id']));
+
+            $items = $request->input('items', []);
+            
+            $orderItemsData = [];
+
+            foreach ($items as $item) {
+                $orderItemsData[] = new OrderItem([
+                    'product_id' => $item['product_id'],
+                    'count' => $item['count'],
+                ]);
+            }
+
+            $order->items()->delete();
+            $order->items()->saveMany($orderItemsData);
+
+            DB::commit();
+
+            return $order->load('items');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response('', 500);
+        }
     }
 
     public function destroy(Order $order)
