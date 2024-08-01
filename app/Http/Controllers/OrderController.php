@@ -111,6 +111,18 @@ class OrderController extends Controller
         }
     }
 
+    public function complete(Order $order)
+    {
+        if ($order->status !== OrderStatus::Completed->value) {
+            $order->update([
+                'status' => OrderStatus::Completed->value,
+                'completed_at' => now(),
+            ]);            
+        }
+
+        return response('', 200);
+    }
+
     public function destroy(Order $order)
     {
     }

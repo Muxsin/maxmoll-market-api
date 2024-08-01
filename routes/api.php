@@ -15,4 +15,5 @@ Route::group(['prefix' => 'v1'], function() {
     Route::get('/orders/{order}', [OrderController::class, 'show']);
     Route::post('/orders', [OrderController::class, 'store']);
     Route::put('/orders/{order}', [OrderController::class, 'update']);
+    Route::post('/orders/{order}/complete', [OrderController::class, 'complete']);
 });
