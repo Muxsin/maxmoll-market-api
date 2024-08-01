@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('customer', 255);
             $table->timestamps();
-            $table->timestamp('completed_at');
+            $table->timestamp('completed_at')->nullable();
             $table->foreignId('warehouse_id')->constrained();
             $table->enum('status', ['active', 'completed', 'canceled'])->default('active');
         });

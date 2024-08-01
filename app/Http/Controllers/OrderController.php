@@ -7,7 +7,10 @@ use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
+use App\Models\OrderItem;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -41,6 +44,31 @@ class OrderController extends Controller
 
     public function store(StoreOrderRequest $request)
     {
+        DB::beginTransaction();
+
+        try {
+            $order = Order::create([
+                'customer' => $request->input('customer'),
+                'warehouse_id' => $request->input('warehouse_id'),
+                'status' => OrderStatus::Active,
+            ]);
+
+            foreach ($request->input('items') as $item) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item['product_id'],
+                    'count' => $item['count'],
+                ]);
+            }
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            return response('', 500);
+        }
+
+        return response('', 201);
     }
 
     public function show(Order $order)
