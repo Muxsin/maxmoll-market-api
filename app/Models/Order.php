@@ -12,6 +12,8 @@ class Order extends Model
     protected $fillable = [
         'customer',
         'warehouse_id',
+        'status',
+        'completed_at',
     ];
 
     public function warehouse()

@@ -113,17 +113,43 @@ class OrderController extends Controller
 
     public function complete(Order $order)
     {
-        if ($order->status !== OrderStatus::Completed->value) {
-            $order->update([
-                'status' => OrderStatus::Completed->value,
-                'completed_at' => now(),
-            ]);            
+        if ($order->status !== OrderStatus::Active->value) {
+            return response('', 400);
         }
-
+        
+        $order->update([
+            'status' => OrderStatus::Completed->value,
+            'completed_at' => now(),
+        ]);
+        
         return response('', 200);
     }
 
-    public function destroy(Order $order)
+    public function cancel(Order $order)
     {
+        if ($order->status !== OrderStatus::Active->value) {
+            return response('', 400);
+        }
+    
+        $order->update([
+            'status' => OrderStatus::Canceled->value,
+            'completed_at' => now(),
+        ]);
+    
+        return response('', 200);
+    }
+
+    public function resume(Order $order)
+    {
+        if ($order->status !== OrderStatus::Canceled->value) {
+            return response('', 400);
+        }
+    
+        $order->update([
+            'status' => OrderStatus::Active->value,
+            'completed_at' => null,
+        ]);
+    
+        return response('', 200);
     }
 }
