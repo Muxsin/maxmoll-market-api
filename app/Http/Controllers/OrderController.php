@@ -192,6 +192,13 @@ class OrderController extends Controller
         if ($order->status !== OrderStatus::Active->value) {
             return response('Only an active order can be cancelled.', 400);
         }
+
+        foreach($order->items as $order_item) {
+            Stock::where([
+                'product_id' => $order_item['product_id'], 
+                'warehouse_id' => $order->warehouse_id,
+            ])->increment('stock', $order_item->count);
+        }
     
         $order->update([
             'status' => OrderStatus::Canceled,
@@ -206,12 +213,50 @@ class OrderController extends Controller
         if ($order->status !== OrderStatus::Canceled->value) {
             return response('Only a cancelled order can be resumed.', 400);
         }
+
+        DB::beginTransaction();
+        
+        try {
+            foreach($order->items as $order_item) {
+                $stock = Stock::where([
+                    'product_id' => $order_item['product_id'], 
+                    'warehouse_id' => $order->warehouse_id,
+                ])->first();
     
-        $order->update([
-            'status' => OrderStatus::Active,
-            'completed_at' => null,
-        ]);
+                if (!$stock) {
+                    throw new InvalidProductException();
+                }
     
-        return $order->load('items');
+                if ($stock->stock < $order_item['count']) {
+                    throw new NotEnoughStockException();
+                }
+
+                DB::table('stocks')
+                    ->where('product_id', $order_item['product_id'])
+                    ->where('warehouse_id', $order->warehouse_id)
+                    ->decrement('stock', $order_item['count']);
+            }
+
+            $order->update([
+                'status' => OrderStatus::Active,
+                'completed_at' => null,
+            ]);
+        
+            DB::commit();
+
+            return $order->load('items');
+        } catch(InvalidProductException $e) {
+            DB::rollBack();
+
+            return response()->json("There are no products in stock", 400);
+        } catch(NotEnoughStockException $e) {
+            DB::rollBack();
+
+            return response()->json("Not enough stock available", 400);
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            return response()->json("An error occurred while processing the order", 500);
+        }
     }
 }
