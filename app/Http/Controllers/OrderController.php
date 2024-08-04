@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Enums\OrderStatus;
+use App\Exceptions\InvalidProductException;
+use App\Exceptions\NotEnoughStockException;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Stock;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -34,7 +37,7 @@ class OrderController extends Controller
         if ($request->filled('warehouse')) {
             $warehouse = $request->get('warehouse');
             $query->join('warehouses', 'orders.warehouse_id', '=', 'warehouses.id')
-              ->where('warehouses.name', 'like', "%{$warehouse}%");
+              ->where('warehouses.name', 'like', "%$warehouse%");
         }
 
         $orders = $query->paginate();
@@ -54,18 +57,44 @@ class OrderController extends Controller
             ]);
 
             foreach ($request->input('items') as $item) {
+                $stock = Stock::where([
+                    'product_id' => $item['product_id'], 
+                    'warehouse_id' => $request->input('warehouse_id')
+                ])->first();
+
+                if (!$stock) {
+                    throw new InvalidProductException();
+                }
+
+                if ($stock->stock < $item['count']) {
+                    throw new NotEnoughStockException();
+                }
+
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $item['product_id'],
                     'count' => $item['count'],
                 ]);
+                
+                DB::table('stocks')
+                    ->where('product_id', $item['product_id'])
+                    ->where('warehouse_id', $request->input('warehouse_id'))
+                    ->decrement('stock', $item['count']);
             }
-
+            
             DB::commit();
+        } catch(InvalidProductException $e) {
+            DB::rollBack();
+
+            return response()->json("There are no products in stock", 400);
+        } catch(NotEnoughStockException $e) {
+            DB::rollBack();
+
+            return response()->json("Not enough stock available", 400);
         } catch (Exception $e) {
             DB::rollBack();
 
-            return response('', 500);
+            return response()->json("An error occurred while processing the order", 500);
         }
 
         return response('', 201);
@@ -118,7 +147,7 @@ class OrderController extends Controller
         }
         
         $order->update([
-            'status' => OrderStatus::Completed->value,
+            'status' => OrderStatus::Completed,
             'completed_at' => now(),
         ]);
         
@@ -132,7 +161,7 @@ class OrderController extends Controller
         }
     
         $order->update([
-            'status' => OrderStatus::Canceled->value,
+            'status' => OrderStatus::Canceled,
             'completed_at' => now(),
         ]);
     
@@ -146,7 +175,7 @@ class OrderController extends Controller
         }
     
         $order->update([
-            'status' => OrderStatus::Active->value,
+            'status' => OrderStatus::Active,
             'completed_at' => null,
         ]);
     

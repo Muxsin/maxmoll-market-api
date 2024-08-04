@@ -9,6 +9,9 @@ class Stock extends Model
 {
     use HasFactory;
 
+    protected $primaryKey = ['product_id', 'warehouse_id'];
+    public $incrementing = false;
+
     public function product()
     {
         return $this->belongsTo(Product::class);
