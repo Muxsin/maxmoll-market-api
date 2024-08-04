@@ -107,43 +107,76 @@ class OrderController extends Controller
 
     public function update(UpdateOrderRequest $request, Order $order)
     {
-        if ($order->status === OrderStatus::Active->value) {
-            DB::beginTransaction();
+        if ($order->status !== OrderStatus::Active->value) {
+            return response('Only an active order can be updated.', 400);
+        }
 
-            try {
-                $order->update($request->only(['customer', 'warehouse_id']));
-    
-                $items = $request->input('items', []);
-                
-                $orderItemsData = [];
-    
-                foreach ($items as $item) {
-                    $orderItemsData[] = new OrderItem([
-                        'product_id' => $item['product_id'],
-                        'count' => $item['count'],
-                    ]);
-                }
-    
-                $order->items()->delete();
-                $order->items()->saveMany($orderItemsData);
-    
-                DB::commit();
-    
-                return $order->load('items');
-            } catch (\Exception $e) {
-                DB::rollBack();
-    
-                return response('', 500);
+        DB::beginTransaction();
+
+        try {
+            $order->update($request->only(['customer']));
+
+            $items = $request->input('items', []);
+            
+            $orderItemsData = [];
+
+            foreach($order->items as $order_item) {
+                Stock::where([
+                    'product_id' => $order_item['product_id'], 
+                    'warehouse_id' => $order->warehouse_id,
+                ])->increment('stock', $order_item->count);
             }
-        } else {
-            return response('', 400);
+
+            foreach ($items as $item) {
+                $stock = Stock::where([
+                    'product_id' => $item['product_id'], 
+                    'warehouse_id' => $order->warehouse_id,
+                ])->first();
+
+                if (!$stock) {
+                    throw new InvalidProductException();
+                }
+
+                if ($stock->stock < $item['count']) {
+                    throw new NotEnoughStockException();
+                }
+                
+                $orderItemsData[] = new OrderItem([
+                    'product_id' => $item['product_id'],
+                    'count' => $item['count'],
+                ]);
+
+                DB::table('stocks')
+                    ->where('product_id', $item['product_id'])
+                    ->where('warehouse_id', $order->warehouse_id)
+                    ->decrement('stock', $item['count']);
+            }
+
+            $order->items()->delete();
+            $order->items()->saveMany($orderItemsData);
+
+            DB::commit();
+
+            return $order->load('items');
+        } catch(InvalidProductException $e) {
+            DB::rollBack();
+
+            return response()->json("There are no products in stock", 400);
+        } catch(NotEnoughStockException $e) {
+            DB::rollBack();
+
+            return response()->json("Not enough stock available", 400);
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            return response()->json("An error occurred while processing the order", 500);
         }
     }
 
     public function complete(Order $order)
     {
         if ($order->status !== OrderStatus::Active->value) {
-            return response('', 400);
+            return response('Only an active order can be completed.', 400);
         }
         
         $order->update([
@@ -151,13 +184,13 @@ class OrderController extends Controller
             'completed_at' => now(),
         ]);
         
-        return response('', 200);
+        return $order->load('items');
     }
 
     public function cancel(Order $order)
     {
         if ($order->status !== OrderStatus::Active->value) {
-            return response('', 400);
+            return response('Only an active order can be cancelled.', 400);
         }
     
         $order->update([
@@ -165,13 +198,13 @@ class OrderController extends Controller
             'completed_at' => now(),
         ]);
     
-        return response('', 200);
+        return $order->load('items');
     }
 
     public function resume(Order $order)
     {
         if ($order->status !== OrderStatus::Canceled->value) {
-            return response('', 400);
+            return response('Only a cancelled order can be resumed.', 400);
         }
     
         $order->update([
@@ -179,6 +212,6 @@ class OrderController extends Controller
             'completed_at' => null,
         ]);
     
-        return response('', 200);
+        return $order->load('items');
     }
 }
