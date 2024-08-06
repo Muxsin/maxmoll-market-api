@@ -1,0 +1,329 @@
+{
+	"info": {
+		"_postman_id": "d24f9c13-0a3f-45c8-80e8-aaa163073f28",
+		"name": "Maxmoll",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12593810"
+	},
+	"item": [
+		{
+			"name": "Product",
+			"item": [
+				{
+					"name": "All",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url_local}}/api/v1/products",
+							"host": [
+								"{{url_local}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"products"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Warehouses",
+			"item": [
+				{
+					"name": "All",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url_local}}/api/v1/warehouses",
+							"host": [
+								"{{url_local}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"warehouses"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Orders",
+			"item": [
+				{
+					"name": "All",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url_local}}/api/v1/orders?customer=Kemmer&warehouse=non&status=canceled",
+							"host": [
+								"{{url_local}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"orders"
+							],
+							"query": [
+								{
+									"key": "customer",
+									"value": "Kemmer"
+								},
+								{
+									"key": "warehouse",
+									"value": "non"
+								},
+								{
+									"key": "status",
+									"value": "canceled"
+								},
+								{
+									"key": "page",
+									"value": "2",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Show",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_local}}/api/v1/orders/13",
+							"host": [
+								"{{url_local}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"orders",
+								"13"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"customer\": \"my order\",\n    \"warehouse_id\": 6,\n    \"items\": [\n        {\n            \"product_id\": 1,\n            \"count\": 5\n        },\n        {\n            \"product_id\": 19,\n            \"count\": 30\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url_local}}/api/v1/orders",
+							"host": [
+								"{{url_local}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Complete",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url_local}}/api/v1/orders/11/complete",
+							"host": [
+								"{{url_local}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"orders",
+								"11",
+								"complete"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url_local}}/api/v1/orders/11/cancel",
+							"host": [
+								"{{url_local}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"orders",
+								"11",
+								"cancel"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Resume",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{url_local}}/api/v1/orders/11/resume",
+							"host": [
+								"{{url_local}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"orders",
+								"11",
+								"resume"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"customer\": \"changed\",\n    \"items\": [\n        {\n            \"product_id\": 1,\n            \"count\": 500\n        },\n        {\n            \"product_id\": 15,\n            \"count\": 100\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url_local}}/api/v1/orders/13",
+							"host": [
+								"{{url_local}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"orders",
+								"13"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Stock Movements",
+			"item": [
+				{
+					"name": "All",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url_local}}/api/v1/stock-movements",
+							"host": [
+								"{{url_local}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"stock-movements"
+							],
+							"query": [
+								{
+									"key": "product_id",
+									"value": "19",
+									"disabled": true
+								},
+								{
+									"key": "warehouse_id",
+									"value": "6",
+									"disabled": true
+								},
+								{
+									"key": "start_date",
+									"value": "2024-08-02",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "url_local",
+			"value": "http://127.0.0.1:8000",
+			"type": "string"
+		}
+	]
+}
