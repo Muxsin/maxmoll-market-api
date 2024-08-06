@@ -11,6 +11,7 @@ use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Stock;
+use App\Models\StockMovement;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -40,7 +41,7 @@ class OrderController extends Controller
               ->where('warehouses.name', 'like', "%$warehouse%");
         }
 
-        $orders = $query->paginate();
+        $orders = $query->paginate($request->input('per_page', 10));
 
         return OrderResource::collection($orders);
     }
@@ -80,6 +81,13 @@ class OrderController extends Controller
                     ->where('product_id', $item['product_id'])
                     ->where('warehouse_id', $request->input('warehouse_id'))
                     ->decrement('stock', $item['count']);
+
+                StockMovement::create([
+                    'product_id' => $item['product_id'],
+                    'warehouse_id' => $order->warehouse_id,
+                    'order_id' => $order->id,
+                    'quantity_change' => -$item['count']
+                ]);
             }
             
             DB::commit();
@@ -125,6 +133,11 @@ class OrderController extends Controller
                     'product_id' => $order_item['product_id'], 
                     'warehouse_id' => $order->warehouse_id,
                 ])->increment('stock', $order_item->count);
+
+                StockMovement::where('product_id', $order_item['product_id'])
+                    ->where('warehouse_id', $order->warehouse_id)
+                    ->where('order_id', $order->id)
+                    ->delete();
             }
 
             foreach ($items as $item) {
@@ -150,6 +163,13 @@ class OrderController extends Controller
                     ->where('product_id', $item['product_id'])
                     ->where('warehouse_id', $order->warehouse_id)
                     ->decrement('stock', $item['count']);
+
+                StockMovement::create([
+                    'product_id' => $item['product_id'],
+                    'warehouse_id' => $order->warehouse_id,
+                    'order_id' => $order->id,
+                    'quantity_change' => -$item['count']
+                ]);
             }
 
             $order->items()->delete();
@@ -198,6 +218,11 @@ class OrderController extends Controller
                 'product_id' => $order_item['product_id'], 
                 'warehouse_id' => $order->warehouse_id,
             ])->increment('stock', $order_item->count);
+
+            StockMovement::where('product_id', $order_item['product_id'])
+                ->where('warehouse_id', $order->warehouse_id)
+                ->where('order_id', $order->id)
+                ->delete();
         }
     
         $order->update([
@@ -235,6 +260,13 @@ class OrderController extends Controller
                     ->where('product_id', $order_item['product_id'])
                     ->where('warehouse_id', $order->warehouse_id)
                     ->decrement('stock', $order_item['count']);
+
+                StockMovement::create([
+                    'product_id' => $order_item['product_id'],
+                    'warehouse_id' => $order->warehouse_id,
+                    'order_id' => $order->id,
+                    'quantity_change' => -$order_item['count']
+                ]);
             }
 
             $order->update([
