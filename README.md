@@ -2,6 +2,7 @@
 
 ## Требование
 - PHP 8.2
+- MySql DBMS
 - Composer
 
 ## Установка
