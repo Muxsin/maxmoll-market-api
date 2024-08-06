@@ -14,11 +14,14 @@ class StockSeeder extends Seeder
      */
     public function run(): void
     {
+        // Получаем все продукты и склады из базы данных
         $products = Product::all();
         $warehouses = Warehouse::all();
 
+        // Создаем 50 записей о запасах
         for ($i = 0; $i < 50; $i++) {
             do {
+                // Выбираем случайный продукт и случайный склад
                 $product = fake()->randomElement($products);
                 $warehouse = fake()->randomElement($warehouses);
             } while(Stock::where('product_id', $product->id)
@@ -26,9 +29,10 @@ class StockSeeder extends Seeder
                 ->exists()
             );
 
+             // Создаем запись о запасах с уникальной комбинацией продукта и склада
             Stock::factory()
-                ->recycle($product)
-                ->recycle($warehouse)
+                ->recycle($product) // Устанавливаем продукт для создания
+                ->recycle($warehouse) // Устанавливаем склад для создания
                 ->create()
             ;
         }
