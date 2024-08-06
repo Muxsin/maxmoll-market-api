@@ -18,11 +18,13 @@ class Order extends Model
 
     public function warehouse()
     {
+        // Определяем связь "принадлежит одному" с моделью Warehouse
         return $this->belongsTo(Warehouse::class);
     }
 
     public function items()
     {
+        // Определяем связь "имеет много" с моделью OrderItem
         return $this->hasMany(OrderItem::class);
     }
 }

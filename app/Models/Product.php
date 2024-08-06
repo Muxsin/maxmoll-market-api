@@ -11,6 +11,7 @@ class Product extends Model
 
     public function stocks()
     {
+        // Определяем связь "имеет много" с моделью Stock
         return $this->hasMany(Stock::class);
     }
 }

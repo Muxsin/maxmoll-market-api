@@ -17,11 +17,13 @@ class OrderItem extends Model
 
     public function product()
     {
+        // Определяем связь "принадлежит одному" с моделью Product
         return $this->belongsTo(Product::class);
     }
 
     public function order()
     {
+        // Определяем связь "принадлежит одному" с моделью Order
         return $this->belongsTo(Order::class);
     }
 }

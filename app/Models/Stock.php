@@ -14,11 +14,13 @@ class Stock extends Model
 
     public function product()
     {
+        // Определяем связь "принадлежит одному" с моделью Product
         return $this->belongsTo(Product::class);
     }
 
     public function warehouse()
     {
+        // Определяем связь "принадлежит одному" с моделью Warehouse
         return $this->belongsTo(Warehouse::class);
     }
 }
